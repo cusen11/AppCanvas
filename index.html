@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text on Image Canvas</title>
+    <style>
+        .canvas {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #myCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <label for="textInput">Nhập văn bản:</label>
+    <input type="text" id="textInput" oninput="drawTextToCanvas()">
+    
+    <br>
+
+    <label for="textX">Vị trí X:</label>
+    <input type="number" id="textX" value="10" oninput="drawTextToCanvas()">
+
+    <label for="textY">Vị trí Y:</label>
+    <input type="number" id="textY" value="30" oninput="drawTextToCanvas()">
+
+    <label for="textFont">Font:</label>
+    <input type="text" id="textFont" value="20px Arial" oninput="drawTextToCanvas()">
+
+    <label for="textColor">Màu chữ:</label>
+    <input type="color" id="textColor" value="#000000" oninput="drawTextToCanvas()">
+
+    <!-- Sử dụng thẻ img để hiển thị ảnh nền -->
+    <div class="canvas">
+        <img id="backgroundImage" src="bg.png" style="width: 100%; height: 100%;" alt="Background Image">
+        <canvas id="myCanvas" style="display: none;">
+            Your browser does not support the HTML5 canvas tag.
+        </canvas>
+    </div>
+
+    <!-- Nút Download -->
+    <button onclick="downloadImage()">Download</button>
+
+    <script>
+        function drawTextToCanvas() { 
+            const text = document.getElementById('textInput').value; 
+            const textX = parseInt(document.getElementById('textX').value, 10);
+            const textY = parseInt(document.getElementById('textY').value, 10);
+ 
+            const textFont = document.getElementById('textFont').value;
+            const textColor = document.getElementById('textColor').value;
+ 
+            const canvas = document.getElementById('myCanvas');
+            const context = canvas.getContext('2d');
+ 
+            const backgroundImage = document.getElementById('backgroundImage');
+ 
+            canvas.width = backgroundImage.width;
+            canvas.height = backgroundImage.height;
+ 
+            backgroundImage.style.display = 'none';
+            canvas.style.display = 'block';
+ 
+            context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+ 
+            context.font = textFont;
+            context.fillStyle = textColor;
+            context.fillText(text, textX, textY);
+        }
+ 
+        function downloadImage() {
+            const canvas = document.getElementById('myCanvas');
+
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL();
+            link.download = 'text_on_image.png';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

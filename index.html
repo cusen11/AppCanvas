@@ -19,12 +19,25 @@
         }
         h2 {
             margin-bottom: 20px;
+        } 
+        label{
+            margin: 0 10px;
+            width: 100px;
+            height: 100px; 
+            cursor: pointer;
         }
-
+        #screen1 input{
+            display: none;
+        }
+        label img{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
         .canvas-container {
             position: relative;
             width: 100%;
-            max-width: 400px; /* Điều chỉnh kích thước tối đa của canvas */
+            max-width: fit-content;  
             margin: 0 auto;
         }
 
@@ -44,40 +57,29 @@
 
         #previewCanvas {
             max-width: 100%;
-            max-height: 400px; /* Điều chỉnh kích thước tối đa của canvas preview */
+            max-height: fit-content;  
+        }
+        .image-container{
+            display: flex;
+            justify-content: center;
+            align-items: start;
         }
     </style>
 </head>
 <body>
-
-    <!-- Screen 1: Chọn hình có sẵn -->
+ 
     <div id="screen1" class="screen">
         <h2>Screen 1</h2>
 
-        <div class="image-container">
-            <label>
-                <input type="radio" name="imageOption" value="./img1.jpg" onchange="updateSelectedImage()" checked>
-                Ảnh 1
-            </label>
-
-            <label>
-                <input type="radio" name="imageOption" value="./img2.jpg" onchange="updateSelectedImage()">
-                Ảnh 2
-            </label>
-
-            <label>
-                <input type="radio" name="imageOption" value="./img3.jpg" onchange="updateSelectedImage()">
-                Ảnh 3
-            </label>
-        </div>
+        
 
         <img id="selectedImage" class="selected-image" src="./img1.jpg" alt="Selected Image">
-
+        <div class="image-container"> 
+        </div>
         <br>
         <button onclick="nextToScreen2()">Next</button>
     </div>
-
-    <!-- Screen 2: Nhập văn bản -->
+ 
     <div id="screen2" class="screen">
         <h2>Screen 2</h2>
 
@@ -94,8 +96,7 @@
         <button onclick="backToScreen1()">Back</button>
         <button onclick="nextToScreen3()">Next</button>
     </div>
-
-    <!-- Screen 3: Xem lại và Download -->
+ 
     <div id="screen3" class="screen">
         <h2>Screen 3</h2>
 
@@ -105,153 +106,134 @@
             </canvas>
         </div>
 
-        <div>
-            <label>
-                <input type="radio" name="fontOption" value="20px Arial" onchange="updatePreviewFont()" checked>
-                Arial
-            </label>
-
-            <label>
-                <input type="radio" name="fontOption" value="30px Times New Roman" onchange="updatePreviewFont()">
-                Times New Roman
-            </label>
-
-            <!-- Thêm các radio button và nhãn tương ứng với các font khác -->
+        <div id="selectFonts"> 
+ 
         </div>
 
         <button onclick="backToScreen2()">Back</button>
         <button onclick="downloadFinalCanvas()">Download</button>
     </div>
 
-    <script>
+    <script> 
         let drawTimeout;
-        let selectedFont = 'Arial'; // Font mặc định
-
-        // Object để lưu trữ thông tin tùy chọn từ screen 1 và 2
-        let options = {
-            selectedImage: './img1.jpg',
+        let options = { 
+            image: './img1.jpg',
+            size: 30,
+            font : 'Arial',
             textInput: '',
-            font: 'Arial'
-        };
+            color: 'black',
 
-        function showScreen(screenId) {
-            // Hide all screens
+        };
+        const listImage = [
+            {image: './img1.jpg', font: ['Arial', 'Times New Roman', 'Courier New']},
+            {image: './img2.jpg', font: ['Helvetica', 'Georgia', 'Verdana']},
+            {image: './img3.jpg', font: ['Impact', 'Comic Sans MS', 'Trebuchet MS']},
+        ]
+            const initView = () => {
+            const container = document.querySelector('.image-container');
+            
+            listImage.forEach(e => {
+                const label = document.createElement('label');
+                const input = document.createElement('input'); 
+                input.addEventListener('change', () => updateSelectedImage());
+                input.type = 'radio';
+                input.name = 'imageOption';
+                input.value = e.image
+                const image = new Image();
+                image.src = e.image; 
+                label.appendChild(image)
+                label.appendChild(input) 
+                container.appendChild(label);
+            });
+        };
+ 
+        initView() 
+
+        function updateSelectedImage() {  
+            options.image = document.querySelector('input[name="imageOption"]:checked').value;
+            document.getElementById('selectedImage').src = options.image;
+        }
+
+        function showScreen(screenId,id) {  
             const screens = document.querySelectorAll('.screen');
             screens.forEach(screen => {
                 screen.style.display = 'none';
-            });
-
-            // Show the selected screen
+            });  
             document.getElementById(screenId).style.display = 'block';
+           if(id){
+            drawCanvas(id)
+           }
         }
 
-        function nextToScreen2() {
-            showScreen('screen2');
-
-            // Lưu tùy chọn từ screen 1
-            options.selectedImage = document.querySelector('input[name="imageOption"]:checked').value;
-
-            // Get the selected image
-            const selectedImage = document.getElementById('selectedImage');
-            
-            // Create a new canvas and draw the selected image
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
+        const drawCanvas = (id) =>{
+            const previewCanvas = document.getElementById(id);
+            const previewContext = previewCanvas.getContext('2d');  
             const image = new Image();
-            image.src = options.selectedImage;
+            image.src = options.image; 
+            previewCanvas.width = image.width;
+            previewCanvas.height = image.height;
+            previewContext.drawImage(image, 0, 0); 
+            previewContext.font = `${options.size}px ${options.font}`;
+            previewContext.fillStyle = options.color;
+            previewContext.textAlign = 'center';
 
-            image.onload = function() {
-                canvas.width = image.width;
-                canvas.height = image.height;
-                context.drawImage(image, 0, 0);
-            };
-
-            // Hide the selected image element
-            selectedImage.style.display = 'none';
-
-            // Draw text on canvas if there's any text in the textarea
-            drawTextToCanvas();
+            previewContext.fillText(options.textInput, previewCanvas.width / 2, previewCanvas.height / 2);
         }
+
+        
+        
+        function drawTextToCanvas() { 
+            options.textInput = document.getElementById('textInput').value; 
+            drawCanvas('canvas')
+        }
+        
+        function scheduleDrawTextToCanvas() {
+            clearTimeout(drawTimeout);
+            drawTimeout = setTimeout(drawTextToCanvas, 500); 
+        }
+
 
         function backToScreen1() {
             showScreen('screen1');
         }
-
-        function nextToScreen3() {
-            showScreen('screen3');
-
-            // Draw a preview of the canvas on Screen 3
-            drawPreviewCanvas();
-        }
-
         function backToScreen2() {
-            showScreen('screen2');
+            showScreen('screen2','canvas'); 
+        } 
+
+        function nextToScreen2() {
+            showScreen('screen2','canvas'); 
+        } 
+        function nextToScreen3() {
+            showScreen('screen3','previewCanvas'); 
+            updateFontbyImage();
         }
-
-        function updateSelectedImage() {
-            options.selectedImage = document.querySelector('input[name="imageOption"]:checked').value;
-            document.getElementById('selectedImage').src = options.selectedImage;
+        const selectFonts = document.getElementById('selectFonts');
+        const updateFontbyImage = () =>{
+            selectFonts.innerHTML = ''
+            const imageFind = listImage.find(e => e.image === options.image)
+            for (let i = 0; i < imageFind.font.length; i++) {
+                const e = imageFind.font[i];
+                const label = document.createElement('label');
+                const input = document.createElement('input');  
+                const span = document.createElement('span');
+                span.innerHTML = e;
+                input.addEventListener('change', () => updatePreviewFont());
+                input.type = 'radio';
+                input.name = 'fontOption';
+                input.value = e 
+                label.appendChild(input) 
+                label.appendChild(span)
+                selectFonts.appendChild(label);
+            } 
         }
-
-        function scheduleDrawTextToCanvas() {
-            clearTimeout(drawTimeout);
-            drawTimeout = setTimeout(drawTextToCanvas, 1000);
-        }
-
-        function drawTextToCanvas() {
-            // Get the text from the textarea
-            options.textInput = document.getElementById('textInput').value;
-
-            // Get the canvas and context
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-
-            // Clear the canvas
-            context.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw the image on the canvas
-            const image = new Image();
-            image.src = options.selectedImage;
-            
-            image.onload = function() {
-                canvas.width = image.width;
-                canvas.height = image.height;
-                context.drawImage(image, 0, 0);
-
-                // Draw the text in the center of the canvas
-                context.font = options.font;
-                context.fillStyle = 'black';
-                context.textAlign = 'center';
-                context.fillText(options.textInput, canvas.width / 2, canvas.height / 2);
-            };
-        }
-
-        function drawPreviewCanvas() {
-            // Get the canvas and context for the preview canvas
-            const previewCanvas = document.getElementById('previewCanvas');
-            const previewContext = previewCanvas.getContext('2d');
-
-            // Get the canvas from Screen 2
-            const image = new Image();
-            image.src = options.selectedImage;
-
-            // Draw a preview of the original canvas on the preview canvas
-            previewCanvas.width = image.width;
-            previewCanvas.height = image.height;
-            previewContext.drawImage(image, 0, 0);
-
-            // Draw the text on the preview canvas with the selected font
-            previewContext.font = options.font;
-            previewContext.fillStyle = 'black';
-            previewContext.textAlign = 'center';
-            previewContext.fillText(options.textInput, previewCanvas.width / 2, previewCanvas.height / 2);
-        }
-
-        function updatePreviewFont() {
-            // Get the selected font
-            options.font = document.querySelector('input[name="fontOption"]:checked').value;
+        
  
-            drawPreviewCanvas();
+        function updatePreviewFont() { 
+            options.font = document.querySelector('input[name="fontOption"]:checked').value; 
+            clearTimeout(drawTimeout);
+            drawTimeout = setTimeout(()=>{
+                showScreen('screen3','previewCanvas');
+            }, 500); 
         }
 
         function downloadFinalCanvas() {
@@ -264,9 +246,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        }
-
-        // Show the initial screen
+        } 
         showScreen('screen1');
     </script>
 </body>

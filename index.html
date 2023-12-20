@@ -176,15 +176,18 @@
             previewContext.font = `${options.size}px ${options.font}`;
             previewContext.fillStyle = options.color;
             previewContext.textAlign = 'center';
-
-            previewContext.fillText(options.textInput, previewCanvas.width / 2, previewCanvas.height / 2);
+            const lines = options.textInput.split('\n');
+            const lineHeight = options.size + 5;
+            for (let i = 0; i < lines.length; i++) {
+                previewContext.fillText(lines[i], previewCanvas.width / 2, (previewCanvas.height / 2) + i * lineHeight);
+            }
         }
 
         
         
         function drawTextToCanvas() { 
             options.textInput = document.getElementById('textInput').value; 
-            drawCanvas('canvas')
+            drawCanvas('canvas') 
         }
         
         function scheduleDrawTextToCanvas() {
